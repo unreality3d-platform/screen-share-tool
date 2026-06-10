@@ -1,0 +1,115 @@
+# Builds the Screen Share Tool into a .unitypackage and publishes it as a GitHub Release.
+# Modeled on the u3d-template packaging workflow, minus the version.txt/commit-back steps,
+# which this tool doesn't need (no Creator Dashboard version comparison here).
+
+name: Screen Share Tool — Package Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Assets/Screen Share/**'
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: 'Release tag (auto-generated if empty)'
+        required: false
+        type: string
+      release_notes:
+        description: 'Extra notes appended to the release body (optional)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  package-and-release:
+    name: Build package and publish release
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'unreality3d-platform'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-screen-share-tool-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: Library-screen-share-tool-
+
+      - name: Export .unitypackage with Unity
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          unityVersion: auto
+          buildMethod: ScreenShareTool.Editor.ScreenSharePackageExporter.ExportPackageCommandLine
+          manualExit: true
+
+      - name: Verify generated package
+        run: |
+          PACKAGE=$(find Build -name "*.unitypackage" -print -quit 2>/dev/null)
+          if [ -n "$PACKAGE" ]; then
+            size=$(stat -c%s "$PACKAGE")
+            echo "Package found: $PACKAGE ($((size / 1024))KB)"
+          else
+            echo "ERROR: No .unitypackage found in Build/"
+            exit 1
+          fi
+
+      - name: Determine release tag
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version_tag }}" ]; then
+            TAG="${{ github.event.inputs.version_tag }}"
+          else
+            TAG="release-$(date +%m-%d-%y-%H-%M-%S)"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Build release notes
+        id: notes
+        run: |
+          cat > release_notes.md << 'EOF'
+          # Screen Share Tool
+
+          A standalone Unity WebGL/WebXR screen-share package. Viewable on desktop, mobile,
+          and WebXR VR browsers; shareable from desktop browsers.
+
+          ## Install
+
+          1. Download `ScreenShareTool.unitypackage` below.
+          2. In Unity: **Assets > Import Package > Custom Package**, choose the file, import.
+          3. On import you'll be prompted to install the required **LiveKit WebGL SDK** — click
+             **Install LiveKit SDK**. (Or add it yourself: Package Manager > Add package from
+             git URL > `https://github.com/livekit/client-sdk-unity-web.git#v2.0.0`)
+          4. In a scene, use **Screen Share > Add Screen Share Setup**, then fill in your
+             Server URL and Token Endpoint URL on the ScreenShareSettings asset.
+
+          The token-server setup guide is linked on the tool's page.
+          EOF
+
+          if [ -n "${{ github.event.inputs.release_notes }}" ]; then
+            printf '\n%s\n' "${{ github.event.inputs.release_notes }}" >> release_notes.md
+          fi
+
+          echo "body<<DELIMITER" >> $GITHUB_OUTPUT
+          cat release_notes.md >> $GITHUB_OUTPUT
+          echo "DELIMITER" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          body: ${{ steps.notes.outputs.body }}
+          files: Build/*.unitypackage
+          draft: false
+          prerelease: false

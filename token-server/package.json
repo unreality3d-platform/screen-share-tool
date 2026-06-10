@@ -1,0 +1,6 @@
+{
+  "type": "module",
+  "dependencies": {
+    "livekit-server-sdk": "^2.15.4"
+  }
+}
