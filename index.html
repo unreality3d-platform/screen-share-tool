@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Screen Share Tool</title>
+    <link rel="icon" type="image/png" href="favicon.png">
     <style>
         * {
             margin: 0;
@@ -207,6 +208,7 @@
         <section>
             <h2>What it is</h2>
             <p>A drop-in screen-sharing package for Unity WebGL and WebXR projects. Add it to a scene, point it at your own server, and visitors can share a desktop screen into the space and watch it together on a surface you place. It runs in the browser, so nobody downloads anything to view or share.</p>
+            <p>Working example on the <a href="https://unreality3d.com/">Unreality3D.com</a> platform: <a href="https://unreality3d.com/spacedolphin/screen-share-demo/">Screen Share Demo</a>.</p>
         </section>
 
         <section>
@@ -239,20 +241,21 @@
 
         <section>
             <h2>Self-hosting the token server</h2>
+            <p>This is the server side of setup. If you haven't already, do the Quick start above first — download the Unity package, import it into your project, and run Screen Share > Add Screen Share Setup. That's what creates the ScreenShareSettings asset you'll fill in at Step 6.</p>
             <p>The Screen Share Tool needs two things from you to connect: a <strong>LiveKit server URL</strong> and a small <strong>token endpoint</strong> that hands out signed access passes. This guide walks through running your own token endpoint on Vercel, so the keys and the cost are yours and nothing is shared with anyone else.</p>
             <p>You don't need to be a backend developer to follow this. It's a single file, two settings, and a deploy button. The whole thing should take about fifteen minutes.</p>
 
             <h3>Does this work for my project?</h3>
-            <p>This is a browser-based tool. It runs in experiences built with Unity 6.3+ LTS that play in a web browser, including browser-based VR (WebXR Export) and mobile browsers. It does <strong>not</strong> run in a standalone build, an app installed directly onto a headset like a Quest, or a native desktop or mobile app. Those don't have the browser layer this tool relies on.</p>
-            <p>Within the browser-based builds it does support, there's one split worth knowing up front:</p>
+            <p>This is a browser-based tool. It runs in experiences built with Unity 6.3+ LTS that play in a web browser, such as experiences published through the <a href="https://unreality3d.com/quickstart.html">Unreality3d.com</a> platform's free pipeline, including browser-based VR (WebXR Export) and mobile browsers. It does <strong>not</strong> run in a standalone build, an app installed directly onto a headset like a Quest, or a native desktop or mobile app. Those don't have the browser layer this tool relies on.</p>
+            <p>Within the browser-based builds it does support, there's one split to keep in mind:</p>
             <ul class="bullets">
-                <li>Anyone can <strong>view</strong> a shared screen on a desktop browser, in a VR headset's browser (WebXR Export), or on a phone or tablet browser.</li>
-                <li><strong>Sharing</strong> a screen works from desktop browsers only. A person in VR or on mobile can watch what's being shared, but the act of sharing is desktop-only.</li>
+                <li>Anyone can <strong>view</strong> a shared screen on a desktop browser, in a VR headset's browser, or on a phone or tablet browser or homescreen install.</li>
+                <li><strong>Sharing</strong> a screen works from desktop browsers only. A person in browser VR or on mobile can watch what's being shared, but the act of sharing is desktop-only.</li>
             </ul>
-            <p>So in a typical session someone on a <strong>desktop</strong> shares their screen, and everyone else, desktop, headset, or phone, watches.</p>
-            <p>(There's a short note at the end on what standalone requires, if that's what you're after.)</p>
+            <p>So in a typical session someone using a <strong>desktop browser</strong> shares their screen, and everyone else except standalone VR — so desktop browser, headset browser, or phone browser/install — watches.</p>
+            <p>(There's a short note at the end of this doc about the additional work standalone requires, to help point you in the right direction if that's what you're after.)</p>
 
-            <h3>The request and response it expects</h3>
+            <h3>The technical request and response expectation</h3>
             <p>The Unity side of the tool sends one request and expects one answer. If you ever swap or rebuild your endpoint, this is what must be preserved, exactly.</p>
             <p>The request it sends:</p>
             <ul class="bullets">
@@ -270,7 +273,7 @@
             <p>By the end of these steps you'll have:</p>
             <ol class="steps">
                 <li>A <strong>LiveKit</strong> server, which gives you a server URL plus an API key and secret (free tier is fine to start).</li>
-                <li>A free <strong>Vercel</strong> account, where the endpoint will live.</li>
+                <li>A free <strong>Vercel</strong> account (for non-commercial use), where the endpoint will live.</li>
                 <li>Node.js installed on your computer, if you want to deploy from the command line. (You can also deploy straight from a Git repository without installing anything; both paths are below.)</li>
             </ol>
 
@@ -300,7 +303,7 @@
     "livekit-server-sdk": "^2.15.4"
   }
 }</code></pre>
-            <p class="code-download"><a href="token-server/package.json" download>Download package.json</a></p>
+            <p class="code-download">Alternately, <a href="token-server/package.json" download>Download package.json</a></p>
             <p>Put the following into <code>api/livekit-token.js</code>:</p>
             <pre><code>// api/livekit-token.js
 // Issues a signed LiveKit access token. POST room + identity in, signed token out.
@@ -400,7 +403,7 @@ export default async function handler(req, res) {
     res.status(500).json({ error: 'Token generation failed' });
   }
 }</code></pre>
-            <p class="code-download"><a href="token-server/api/livekit-token.js" download>Download livekit-token.js</a></p>
+            <p class="code-download">Alternately, <a href="token-server/api/livekit-token.js" download>Download livekit-token.js</a></p>
             <p>This checks if the request is a real <code>POST</code>, reads <code>room</code>, <code>identity</code>, and <code>canPublish</code>, signs a six-hour access pass with your LiveKit key and secret, and sends back <code>{ "token": "..." }</code>. The publishing permission is tied directly to <code>canPublish</code>, so a watcher can never accidentally be handed a sharing pass.</p>
 
             <h3>Step 3 &mdash; Set your allowed origins</h3>
@@ -408,6 +411,7 @@ export default async function handler(req, res) {
             <p>Add the <strong>origin</strong> of the URL where your published experience runs. A couple of examples:</p>
             <ul class="bullets">
                 <li>If you serve from your own site, add that site's <code>https://</code> address.</li>
+                <li>If your experience is served at <code>unreality3d.com/yourname/yourproduct</code>, the origin is <code>https://unreality3d.com</code> (just the scheme and host, no path). It's already in the list in the code above.</li>
                 <li>If you serve from GitHub Pages, add your GitHub Pages address, which is <code>https://yourusername.github.io</code> (just the scheme and host; the repository name that comes after it in the path is not part of the origin, so leave it off).</li>
                 <li>Keep the <code>localhost</code> entries while you're testing locally, and remove them later if you like.</li>
             </ul>
@@ -432,11 +436,11 @@ export default async function handler(req, res) {
             </ol>
             <p>That's why the code reads <code>process.env.LIVEKIT_API_KEY</code> and <code>process.env.LIVEKIT_API_SECRET</code> instead of having the actual values written in. The names have to match exactly. After this redeploy, your endpoint is live and issuing tokens.</p>
 
-            <h3>Step 6 &mdash; Paste both values into the asset in Unity</h3>
+            <h3>Step 6 &mdash; Paste Server and Token URLs into the asset in Unity</h3>
             <p>Open your <code>ScreenShareSettings</code> asset in the Unity Editor. (If you don't have one yet, create it from the right-click menu in the Project window: <strong>Assets &gt; Create &gt; Screen Share &gt; Settings</strong>, then assign it to your <code>ScreenShareRoom</code>.) Fill in the two fields:</p>
             <ul class="bullets">
                 <li><strong>Server Url:</strong> your <code>wss://...</code> address from Step 1.</li>
-                <li><strong>Token Endpoint Url:</strong> the <code>https://your-project-name.vercel.app/api/livekit-token</code> address from Step 5.</li>
+                <li><strong>Token Endpoint Url:</strong> the <code>https://your-project-name.vercel.app/api/livekit-token</code> address from Step 4.</li>
             </ul>
             <p>Nothing else on the Unity side changes. The tool already knows how to call the endpoint in the shape described up top. Save the asset, build, and you'll be connecting to your own token server.</p>
 
@@ -446,8 +450,8 @@ export default async function handler(req, res) {
             <pre><code>curl -i -X OPTIONS https://your-project-name.vercel.app/api/livekit-token \
   -H "Origin: https://unreality3d.com" \
   -H "Access-Control-Request-Method: POST"</code></pre>
-            <p>You want a <code>204</code> response, and an <code>Access-Control-Allow-Origin</code> header that echoes back your origin. This check passes whether or not your credentials are in place, since it's only testing the allow list. If that header is missing, the origin isn't on your allow list; check Step 3 for a typo or a stray slash.</p>
-            <p>Get a real token:</p>
+            <p>Use one of your own allowed origins in the <code>-H "Origin: ..."</code> line if you've removed <code>https://unreality3d.com</code> from the list.</p>
+            <p>You want a <code>204</code> response, and an <code>Access-Control-Allow-Origin</code> header that echoes back your origin.<p>Get a real token:</p>
             <pre><code>curl -i -X POST https://your-project-name.vercel.app/api/livekit-token \
   -H "Content-Type: application/json" \
   -H "Origin: https://unreality3d.com" \
