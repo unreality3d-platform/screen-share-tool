@@ -208,7 +208,7 @@
         <section>
             <h2>What it is</h2>
             <p>A drop-in screen-sharing package for Unity WebGL and WebXR projects. Add it to a scene, point it at your own server, and visitors can share a desktop screen into the space and watch it together on a surface you place. It runs in the browser, so nobody downloads anything to view or share.</p>
-            <p>Working example on the <a href="https://unreality3d.com/">Unreality3d.com</a> platform <a href="https://unreality3d.com/spacedolphin/screen-share-demo/">here</a>.</p>
+            <p>Working example on the <a href="https://unreality3d.com/">Unreality3D.com</a> platform: <a href="https://unreality3d.com/spacedolphin/screen-share-demo/">Screen Share Demo</a>.</p>
         </section>
 
         <section>
@@ -241,6 +241,7 @@
 
         <section>
             <h2>Self-hosting the token server</h2>
+            <p>This is the server side of setup. If you haven't already, do the Quick start above first — download the Unity package, import it into your project, and run Screen Share > Add Screen Share Setup. That's what creates the ScreenShareSettings asset you'll fill in at Step 6.</p>
             <p>The Screen Share Tool needs two things from you to connect: a <strong>LiveKit server URL</strong> and a small <strong>token endpoint</strong> that hands out signed access passes. This guide walks through running your own token endpoint on Vercel, so the keys and the cost are yours and nothing is shared with anyone else.</p>
             <p>You don't need to be a backend developer to follow this. It's a single file, two settings, and a deploy button. The whole thing should take about fifteen minutes.</p>
 
@@ -410,7 +411,7 @@ export default async function handler(req, res) {
             <p>Add the <strong>origin</strong> of the URL where your published experience runs. A couple of examples:</p>
             <ul class="bullets">
                 <li>If you serve from your own site, add that site's <code>https://</code> address.</li>
-                <li>If your experience is served at unreality3d.com/yourname/yourproduct, the origin is https://unreality3d.com (just the scheme and host, no path). It's already in the list in the code above.</li>
+                <li>If your experience is served at <code>unreality3d.com/yourname/yourproduct</code>, the origin is <code>https://unreality3d.com</code> (just the scheme and host, no path). It's already in the list in the code above.</li>
                 <li>If you serve from GitHub Pages, add your GitHub Pages address, which is <code>https://yourusername.github.io</code> (just the scheme and host; the repository name that comes after it in the path is not part of the origin, so leave it off).</li>
                 <li>Keep the <code>localhost</code> entries while you're testing locally, and remove them later if you like.</li>
             </ul>
@@ -439,7 +440,7 @@ export default async function handler(req, res) {
             <p>Open your <code>ScreenShareSettings</code> asset in the Unity Editor. (If you don't have one yet, create it from the right-click menu in the Project window: <strong>Assets &gt; Create &gt; Screen Share &gt; Settings</strong>, then assign it to your <code>ScreenShareRoom</code>.) Fill in the two fields:</p>
             <ul class="bullets">
                 <li><strong>Server Url:</strong> your <code>wss://...</code> address from Step 1.</li>
-                <li><strong>Token Endpoint Url:</strong> the <code>https://your-project-name.vercel.app/api/livekit-token</code> address from Step 5.</li>
+                <li><strong>Token Endpoint Url:</strong> the <code>https://your-project-name.vercel.app/api/livekit-token</code> address from Step 4.</li>
             </ul>
             <p>Nothing else on the Unity side changes. The tool already knows how to call the endpoint in the shape described up top. Save the asset, build, and you'll be connecting to your own token server.</p>
 
@@ -449,8 +450,8 @@ export default async function handler(req, res) {
             <pre><code>curl -i -X OPTIONS https://your-project-name.vercel.app/api/livekit-token \
   -H "Origin: https://unreality3d.com" \
   -H "Access-Control-Request-Method: POST"</code></pre>
-            <p>You want a <code>204</code> response, and an <code>Access-Control-Allow-Origin</code> header that echoes back your origin. This check passes whether or not your credentials are in place, since it's only testing the allow list. If that header is missing, the origin isn't on your allow list; check Step 3 for a typo or a stray slash.</p>
-            <p>Get a real token:</p>
+            <p>Use one of your own allowed origins in the <code>-H "Origin: ..."</code> line if you've removed <code>https://unreality3d.com</code> from the list.</p>
+            <p>You want a <code>204</code> response, and an <code>Access-Control-Allow-Origin</code> header that echoes back your origin.<p>Get a real token:</p>
             <pre><code>curl -i -X POST https://your-project-name.vercel.app/api/livekit-token \
   -H "Content-Type: application/json" \
   -H "Origin: https://unreality3d.com" \
