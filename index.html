@@ -246,13 +246,13 @@
 
             <h3>Does this work for my project?</h3>
             <p>This is a browser-based tool. It runs in experiences built with Unity 6.3+ LTS that play in a web browser, such as experiences published through the <a href="https://unreality3d.com/quickstart.html">Unreality3d.com</a> platform's free pipeline, including browser-based VR (WebXR Export) and mobile browsers. It does <strong>not</strong> run in a standalone build, an app installed directly onto a headset like a Quest, or a native desktop or mobile app. Those don't have the browser layer this tool relies on.</p>
-            <p>Within the browser-based builds it does support, there's one split worth knowing up front:</p>
+            <p>Within the browser-based builds it does support, there's one split to keep in mind:</p>
             <ul class="bullets">
-                <li>Anyone can <strong>view</strong> a shared screen on a desktop browser, in a VR headset's browser (WebXR Export), or on a phone or tablet browser.</li>
-                <li><strong>Sharing</strong> a screen works from desktop browsers only. A person in VR or on mobile can watch what's being shared, but the act of sharing is desktop-only.</li>
+                <li>Anyone can <strong>view</strong> a shared screen on a desktop browser, in a VR headset's browser, or on a phone or tablet browser or homescreen install.</li>
+                <li><strong>Sharing</strong> a screen works from desktop browsers only. A person in browser VR or on mobile can watch what's being shared, but the act of sharing is desktop-only.</li>
             </ul>
-            <p>So in a typical session someone on a <strong>desktop</strong> shares their screen, and everyone else, desktop, headset, or phone, watches.</p>
-            <p>(There's a short note at the end on what standalone requires, if that's what you're after.)</p>
+            <p>So in a typical session someone using a <strong>desktop browser</strong> shares their screen, and everyone else except standalone VR, so desktop browser, headset browser, or phone browser/install, watches.</p>
+            <p>(There's a short note at the end of this doc about the additional work standalone requires, to help point you in the right direction if that's what you're after.)</p>
 
             <h3>The request and response it expects</h3>
             <p>The Unity side of the tool sends one request and expects one answer. If you ever swap or rebuild your endpoint, this is what must be preserved, exactly.</p>
