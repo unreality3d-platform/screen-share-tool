@@ -65,6 +65,13 @@
             color: #2c3e50;
             font-size: 1.5rem;
             margin-bottom: 0.75rem;
+            padding-top: 0.5rem;
+        }
+
+        section h3 {
+            color: #2c3e50;
+            font-size: 1.15rem;
+            margin: 1.5rem 0 0.5rem;
         }
 
         section p {
@@ -72,12 +79,12 @@
             margin-bottom: 0.75rem;
         }
 
-        ul.scope, ol.steps {
-            margin: 0.5rem 0 0 1.5rem;
+        ul.scope, ol.steps, ul.bullets {
+            margin: 0.5rem 0 0.75rem 1.5rem;
             color: #444;
         }
 
-        ul.scope li, ol.steps li {
+        ul.scope li, ol.steps li, ul.bullets li {
             margin-bottom: 0.5rem;
         }
 
@@ -86,7 +93,38 @@
             padding: 0.15rem 0.4rem;
             border-radius: 4px;
             font-size: 0.9em;
-            word-break: break-all;
+            word-break: break-word;
+        }
+
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin: 0.75rem 0 0.25rem;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+            font-size: inherit;
+            word-break: normal;
+            white-space: pre;
+        }
+
+        .code-download {
+            margin: 0 0 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #e2e6ea;
+            margin: 2.5rem 0 0;
         }
 
         .download-cta {
@@ -125,19 +163,8 @@
             margin-top: 1rem;
         }
 
-        .btn-secondary {
-            display: inline-block;
-            background: #e9ecef;
-            color: #495057;
-            text-decoration: none;
-            font-weight: 500;
-            padding: 0.6rem 1.25rem;
-            border-radius: 6px;
-            transition: background 0.2s ease;
-        }
-
-        .btn-secondary:hover {
-            background: #dee2e6;
+        a {
+            color: #5a6fd8;
         }
 
         footer {
@@ -198,20 +225,244 @@
         </div>
 
         <section>
-            <h2>Installing</h2>
+            <h2>Quick start in Unity</h2>
             <ol class="steps">
                 <li>Download the package above.</li>
                 <li>In Unity, go to <strong>Assets &gt; Import Package &gt; Custom Package</strong>, choose the file, and import it.</li>
                 <li>When the import finishes, a setup window offers to install the LiveKit WebGL SDK, which is the one dependency. Click <strong>Install LiveKit SDK</strong>. You can also add it yourself in Package Manager with <strong>Add package from git URL</strong>: <code>https://github.com/livekit/client-sdk-unity-web.git#v2.0.0</code></li>
                 <li>In your scene, use the menu <strong>Screen Share &gt; Add Screen Share Setup</strong>. It creates the session, a screen surface, and the components that go with them.</li>
-                <li>Open the <strong>ScreenShareSettings</strong> asset and fill in your Server URL and Token Endpoint URL. The setup guide below walks through standing up your own server.</li>
+                <li>Set up your own token server using the guide below, then fill in the two addresses on the <strong>ScreenShareSettings</strong> asset.</li>
             </ol>
         </section>
 
+        <hr class="divider">
+
         <section>
-            <h2>Setting up your server</h2>
-            <p>The tool connects to your own server, so it stays yours and isn't tied to any one platform. The setup guide covers standing up a token server and filling in the two addresses on the settings asset.</p>
-            <a class="btn-secondary" href="screen-share-token-server-setup.pdf">Read the setup guide</a>
+            <h2>Self-hosting the token server</h2>
+            <p>The Screen Share Tool needs two things from you to connect: a <strong>LiveKit server URL</strong> and a small <strong>token endpoint</strong> that hands out signed access passes. This guide walks through running your own token endpoint on Vercel, so the keys and the cost are yours and nothing is shared with anyone else.</p>
+            <p>You don't need to be a backend developer to follow this. It's a single file, two settings, and a deploy button. The whole thing should take about fifteen minutes.</p>
+
+            <h3>Does this work for my project?</h3>
+            <p>This is a browser-based tool. It runs in experiences built with Unity 6.3+ LTS that play in a web browser, including browser-based VR (WebXR Export) and mobile browsers. It does <strong>not</strong> run in a standalone build, an app installed directly onto a headset like a Quest, or a native desktop or mobile app. Those don't have the browser layer this tool relies on.</p>
+            <p>Within the browser-based builds it does support, there's one split worth knowing up front:</p>
+            <ul class="bullets">
+                <li>Anyone can <strong>view</strong> a shared screen on a desktop browser, in a VR headset's browser (WebXR Export), or on a phone or tablet browser.</li>
+                <li><strong>Sharing</strong> a screen works from desktop browsers only. A person in VR or on mobile can watch what's being shared, but the act of sharing is desktop-only.</li>
+            </ul>
+            <p>So in a typical session someone on a <strong>desktop</strong> shares their screen, and everyone else, desktop, headset, or phone, watches.</p>
+            <p>(There's a short note at the end on what standalone requires, if that's what you're after.)</p>
+
+            <h3>The request and response it expects</h3>
+            <p>The Unity side of the tool sends one request and expects one answer. If you ever swap or rebuild your endpoint, this is what must be preserved, exactly.</p>
+            <p>The request it sends:</p>
+            <ul class="bullets">
+                <li>Method: <code>POST</code></li>
+                <li>Header: <code>Content-Type: application/json</code></li>
+                <li>Body:</li>
+            </ul>
+            <pre><code>{ "room": "some-room-name", "identity": "some-user-name", "canPublish": true }</code></pre>
+            <p><code>canPublish</code> is what decides whether that person can share their screen (<code>true</code>) or only watch (<code>false</code>).</p>
+            <p>The answer it expects back:</p>
+            <pre><code>{ "token": "the-signed-access-pass" }</code></pre>
+            <p>One thing that's easy to miss: this is a request sent from a web page on one address to your endpoint on a different address. Browsers protect those "cross-address" requests by first sending a quick permission check (an <code>OPTIONS</code> request) before the real one. Your endpoint has to answer that check first, not just the subsequent real request. The code below does this. If you don't know what any of it means, that's okay, you don't need to. Just don't delete the <code>OPTIONS</code> part (it's not optional).</p>
+
+            <h3>Getting started</h3>
+            <p>By the end of these steps you'll have:</p>
+            <ol class="steps">
+                <li>A <strong>LiveKit</strong> server, which gives you a server URL plus an API key and secret (free tier is fine to start).</li>
+                <li>A free <strong>Vercel</strong> account, where the endpoint will live.</li>
+                <li>Node.js installed on your computer, if you want to deploy from the command line. (You can also deploy straight from a Git repository without installing anything; both paths are below.)</li>
+            </ol>
+
+            <h3>Step 1 &mdash; Get your LiveKit server URL, key, and secret</h3>
+            <p><strong>The easy path: LiveKit Cloud.</strong></p>
+            <ol class="steps">
+                <li>Sign in at <code>https://cloud.livekit.io</code> and create a new LiveKit project.</li>
+                <li>In the left sidebar, open <strong>Settings &rarr; Project</strong>. Your address is the <strong>Project URL</strong> field, with a copy button beside it. One thing to watch for: LiveKit shows this URL <strong>without</strong> the <code>wss://</code> in front, so you'll see something like <code>your-project.livekit.cloud</code>. The tool needs the full version, so add <code>wss://</code> yourself to make it <code>wss://your-project.livekit.cloud</code>. Save that somewhere.</li>
+                <li>In the left sidebar, open <strong>Settings &rarr; API keys</strong> and click <strong>Create key</strong> (top right). When the key is created, LiveKit shows you the <strong>key</strong> and its <strong>secret</strong> together, that one time only. Copy both right then and save them. If you already have a key but never saved its secret, you can't view the secret again, so just create a fresh key and copy that one instead.</li>
+            </ol>
+            <p><strong>Keep that secret private.</strong> It is like a password, and should never go anywhere in your Unity build, your web page, or any public repository. It only belongs in the server you're about to set up.</p>
+            <p><strong>The self-hosting path.</strong> If you'd rather run your own LiveKit server (on your own machine or a host you control), follow LiveKit's self-hosting deployment docs. You'll end up with the same three things: a <code>wss://</code> server URL pointing at your deployment, an API key, and an API secret. Once you have those, the rest of this guide is identical. The only difference is your server URL is your own address instead of a <code>.livekit.cloud</code> one.</p>
+
+            <h3>Step 2 &mdash; Create the function files (on your computer)</h3>
+            <p>Vercel is a free place to run small pieces of web code like this token endpoint, without setting up or maintaining an entire server yourself. If you don't already have an account, go to <code>https://vercel.com</code> and sign up. The free <strong>Hobby</strong> plan is plenty for this, and it doesn't ask for a credit card. Signing up with your GitHub account is the smoothest choice, since it makes the deploy step later a one-click import.</p>
+            <p><em>One thing to note: Vercel's free Hobby plan is meant for personal, non-commercial projects. If you're planning to run this as part of something commercial, check Vercel's current plan terms to see whether you need a paid tier.</em></p>
+            <p>The function's code doesn't get typed into the Vercel website. It lives in files on your own computer, and you'll send them up to Vercel when you deploy in Step 4. So on your computer, make a folder for your token server with this structure:</p>
+            <pre><code>your-token-server/
+  api/
+    livekit-token.js
+  package.json</code></pre>
+            <p><code>your-token-server</code> is any folder name you like; <code>api</code> and <code>package.json</code> must be named exactly as shown, and <code>livekit-token.js</code> can be renamed but its name becomes the end of your endpoint URL.</p>
+            <p>Put the following into <code>package.json</code>:</p>
+            <pre><code>{
+  "type": "module",
+  "dependencies": {
+    "livekit-server-sdk": "^2.15.4"
+  }
+}</code></pre>
+            <p class="code-download"><a href="token-server/package.json" download>Download package.json</a></p>
+            <p>Put the following into <code>api/livekit-token.js</code>:</p>
+            <pre><code>// api/livekit-token.js
+// Issues a signed LiveKit access token. POST room + identity in, signed token out.
+// The API key and secret are read from environment variables and never leave the server.
+
+import { AccessToken } from 'livekit-server-sdk';
+
+// Browser origins allowed to call this endpoint. An "origin" is the scheme + host
+// with no path, e.g. https://unreality3d.com. Add the address(es) your published
+// experience is served from. Keep the localhost entries while testing.
+const ALLOWED_ORIGINS = new Set([
+  'https://unreality3d.com',
+  'https://www.unreality3d.com',
+  'http://localhost:3000',
+  'http://localhost:8080'
+]);
+
+const TOKEN_TTL = '6h';
+
+function applyCorsHeaders(req, res) {
+  const origin = req.headers.origin;
+  if (origin &amp;&amp; ALLOWED_ORIGINS.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Max-Age', '3600');
+  }
+}
+
+function readBody(req) {
+  if (!req.body) return {};
+  if (typeof req.body === 'string') {
+    try {
+      return JSON.parse(req.body);
+    } catch {
+      return {};
+    }
+  }
+  return req.body;
+}
+
+export default async function handler(req, res) {
+  applyCorsHeaders(req, res);
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return;
+  }
+
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
+  try {
+    const apiKey = process.env.LIVEKIT_API_KEY;
+    const apiSecret = process.env.LIVEKIT_API_SECRET;
+
+    if (!apiKey || !apiSecret) {
+      res.status(500).json({ error: 'Server is missing LiveKit credentials' });
+      return;
+    }
+
+    const body = readBody(req);
+    const room = typeof body.room === 'string' ? body.room.trim() : '';
+    const identity = typeof body.identity === 'string' ? body.identity.trim() : '';
+    const canPublish = body.canPublish === true;
+
+    if (room.length === 0 || identity.length === 0) {
+      res.status(400).json({ error: 'room and identity are required' });
+      return;
+    }
+
+    // OPEN ENDPOINT (intentional for v1): anyone who can reach this can request a
+    // token, including a screen-sharing token (canPublish). That's fine for a small,
+    // trusted, private group. Before opening it to a wider or public audience, add a
+    // caller check here (for example, verify a signed login your host issues) before
+    // granting canPublish.
+    const at = new AccessToken(apiKey, apiSecret, {
+      identity,
+      ttl: TOKEN_TTL
+    });
+
+    at.addGrant({
+      roomJoin: true,
+      room,
+      canSubscribe: true,
+      canPublish: canPublish,
+      canPublishData: canPublish
+    });
+
+    const token = await at.toJwt();
+    res.status(200).json({ token });
+  } catch (error) {
+    console.error('livekit-token error:', error &amp;&amp; (error.code || error.message));
+    res.status(500).json({ error: 'Token generation failed' });
+  }
+}</code></pre>
+            <p class="code-download"><a href="token-server/api/livekit-token.js" download>Download livekit-token.js</a></p>
+            <p>This checks if the request is a real <code>POST</code>, reads <code>room</code>, <code>identity</code>, and <code>canPublish</code>, signs a six-hour access pass with your LiveKit key and secret, and sends back <code>{ "token": "..." }</code>. The publishing permission is tied directly to <code>canPublish</code>, so a watcher can never accidentally be handed a sharing pass.</p>
+
+            <h3>Step 3 &mdash; Set your allowed origins</h3>
+            <p>Open <code>api/livekit-token.js</code> and look at the <code>ALLOWED_ORIGINS</code> list at the top. This is the guest list. Only web pages served from an address on this list are allowed to ask your endpoint for a token. Everything else gets turned away.</p>
+            <p>Add the <strong>origin</strong> of the URL where your published experience runs. A couple of examples:</p>
+            <ul class="bullets">
+                <li>If you serve from your own site, add that site's <code>https://</code> address.</li>
+                <li>If you serve from GitHub Pages, add your GitHub Pages address, which is <code>https://yourusername.github.io</code> (just the scheme and host; the repository name that comes after it in the path is not part of the origin, so leave it off).</li>
+                <li>Keep the <code>localhost</code> entries while you're testing locally, and remove them later if you like.</li>
+            </ul>
+            <p>An origin is the scheme and host only. No trailing slash, no path. <code>https://unreality3d.com</code> is right; <code>https://unreality3d.com/</code> or <code>https://unreality3d.com/yourname</code> is not.</p>
+            <p>Do this before you deploy, since these origins are baked into the file you upload. If you change them later, edit the file and deploy again.</p>
+
+            <h3>Step 4 &mdash; Deploy and get your endpoint URL</h3>
+            <p>This is the step that actually creates your project on Vercel and puts your code online. Pick whichever path you're comfortable with.</p>
+            <p><strong>From the command line:</strong> open a terminal in your token-server folder and run <code>npx vercel</code>. The first run asks a few quick questions: log in when prompted, say yes to set up and deploy, accept your account as the scope, let it create a new project (press Enter to accept the suggested name), and when it asks which directory your code is in, press Enter for the current folder. That gives you a preview. Run <code>npx vercel --prod</code> to publish the live version.</p>
+            <p><strong>From a Git repository:</strong> push the folder to GitHub, then in Vercel choose "Add New Project," import the repo, and deploy. The import creates the project for you.</p>
+            <p>When it's live, your endpoint URL is your project's address followed by the function path:</p>
+            <pre><code>https://your-project-name.vercel.app/api/livekit-token</code></pre>
+            <p>That full URL is what Unity needs. One heads-up: the endpoint won't hand out tokens yet, it still needs your LiveKit credentials, which is the next step.</p>
+
+            <h3>Step 5 &mdash; Add your LiveKit credentials, then redeploy</h3>
+            <p>Your key and secret don't go in any code. They go into your Vercel project's settings, where they stay secure on the server. Now that your project exists from Step 4, you can add them:</p>
+            <ol class="steps">
+                <li>In your Vercel project, open <strong>Settings &rarr; Environment Variables</strong>.</li>
+                <li>Add <code>LIVEKIT_API_KEY</code> with your LiveKit <strong>key</strong> as the value.</li>
+                <li>Add <code>LIVEKIT_API_SECRET</code> with your LiveKit <strong>secret</strong> as the value.</li>
+                <li>Deploy once more so the new values take effect: run <code>npx vercel --prod</code> again, or if you used the Git path, use Vercel's <strong>Redeploy</strong> button on the latest deployment.</li>
+            </ol>
+            <p>That's why the code reads <code>process.env.LIVEKIT_API_KEY</code> and <code>process.env.LIVEKIT_API_SECRET</code> instead of having the actual values written in. The names have to match exactly. After this redeploy, your endpoint is live and issuing tokens.</p>
+
+            <h3>Step 6 &mdash; Paste both values into the asset in Unity</h3>
+            <p>Open your <code>ScreenShareSettings</code> asset in the Unity Editor. (If you don't have one yet, create it from the right-click menu in the Project window: <strong>Assets &gt; Create &gt; Screen Share &gt; Settings</strong>, then assign it to your <code>ScreenShareRoom</code>.) Fill in the two fields:</p>
+            <ul class="bullets">
+                <li><strong>Server Url:</strong> your <code>wss://...</code> address from Step 1.</li>
+                <li><strong>Token Endpoint Url:</strong> the <code>https://your-project-name.vercel.app/api/livekit-token</code> address from Step 5.</li>
+            </ul>
+            <p>Nothing else on the Unity side changes. The tool already knows how to call the endpoint in the shape described up top. Save the asset, build, and you'll be connecting to your own token server.</p>
+
+            <h3>Checking that it works</h3>
+            <p>Before building in Unity, you can test the endpoint from your computer's terminal. If you're testing right after your first deploy, the most likely thing still undone is Step 5, adding your LiveKit credentials and redeploying, so start there if the token test below comes back with a credentials error.</p>
+            <p>Check the permission step (the preflight):</p>
+            <pre><code>curl -i -X OPTIONS https://your-project-name.vercel.app/api/livekit-token \
+  -H "Origin: https://unreality3d.com" \
+  -H "Access-Control-Request-Method: POST"</code></pre>
+            <p>You want a <code>204</code> response, and an <code>Access-Control-Allow-Origin</code> header that echoes back your origin. This check passes whether or not your credentials are in place, since it's only testing the allow list. If that header is missing, the origin isn't on your allow list; check Step 3 for a typo or a stray slash.</p>
+            <p>Get a real token:</p>
+            <pre><code>curl -i -X POST https://your-project-name.vercel.app/api/livekit-token \
+  -H "Content-Type: application/json" \
+  -H "Origin: https://unreality3d.com" \
+  -d '{"room":"test-room","identity":"test-user","canPublish":true}'</code></pre>
+            <p>You want a <code>200</code> response with a long <code>token</code> string. If you get a <code>500</code> saying credentials are missing, that's Step 5; add the two environment variables and redeploy, then try again. If you get a <code>400</code>, the body is missing <code>room</code> or <code>identity</code>.</p>
+
+            <h3>A note on security</h3>
+            <p>This endpoint is open on purpose for a test version. Anyone who knows the URL and is calling from an allowed origin can request a token, including a screen-sharing one. For a small private group of people you trust, that's a reasonable place to start, and it keeps the setup simple.</p>
+            <p>If you later open this up to a wider or public audience, that's the time to add a caller check. The spot for it is marked in the code above, right before the token is granted: confirm the person is who they say they are (for example, by checking a signed login your host already issues) before handing out a sharing pass. Adding that check doesn't change anything on the Unity side, since the request and answer stay the same shape.</p>
+
+            <h3>Going further: standalone VR</h3>
+            <p>If you're building a <strong>standalone</strong> app, one installed directly onto a headset rather than opened in its browser, the Screen Share Tool itself won't run there, because it relies on the browser connection that standalone builds don't have.</p>
+            <p>The good news for anyone interested in learning that path: the token server you just built is reusable as-is. A standalone build still needs a token, still asks for it the same way, and still connects to the same LiveKit server URL. What changes is only the Unity side.</p>
+            <p>LiveKit's Unity connection comes in two separate parts, one made for browser builds (which works with De-Panther's WebXR Export enabled VR) and one made for standalone builds. Each only runs on the kind of build it was made for. This tool uses the browser kind. A standalone build needs the standalone part instead (or in addition to the browser part, if you want to support both), and since the standalone part doesn't run in a browser, adding it covers the standalone side but not the browser side. Covering both audiences requires setting up and maintaining both.</p>
+            <p>So if standalone VR is your goal, treat this guide as the back half already done. The front half, wiring up the standalone client in Unity, is its own project, and it's outside what this tool and doc cover.</p>
         </section>
     </main>
 
