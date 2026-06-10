@@ -435,7 +435,7 @@ export default async function handler(req, res) {
             </ol>
             <p>That's why the code reads <code>process.env.LIVEKIT_API_KEY</code> and <code>process.env.LIVEKIT_API_SECRET</code> instead of having the actual values written in. The names have to match exactly. After this redeploy, your endpoint is live and issuing tokens.</p>
 
-            <h3>Step 6 &mdash; Paste both values into the asset in Unity</h3>
+            <h3>Step 6 &mdash; Paste Server and Token URLs into the asset in Unity</h3>
             <p>Open your <code>ScreenShareSettings</code> asset in the Unity Editor. (If you don't have one yet, create it from the right-click menu in the Project window: <strong>Assets &gt; Create &gt; Screen Share &gt; Settings</strong>, then assign it to your <code>ScreenShareRoom</code>.) Fill in the two fields:</p>
             <ul class="bullets">
                 <li><strong>Server Url:</strong> your <code>wss://...</code> address from Step 1.</li>
