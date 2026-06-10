@@ -251,10 +251,10 @@
                 <li>Anyone can <strong>view</strong> a shared screen on a desktop browser, in a VR headset's browser, or on a phone or tablet browser or homescreen install.</li>
                 <li><strong>Sharing</strong> a screen works from desktop browsers only. A person in browser VR or on mobile can watch what's being shared, but the act of sharing is desktop-only.</li>
             </ul>
-            <p>So in a typical session someone using a <strong>desktop browser</strong> shares their screen, and everyone else except standalone VR, so desktop browser, headset browser, or phone browser/install, watches.</p>
+            <p>So in a typical session someone using a <strong>desktop browser</strong> shares their screen, and everyone else except standalone VR — so desktop browser, headset browser, or phone browser/install — watches.</p>
             <p>(There's a short note at the end of this doc about the additional work standalone requires, to help point you in the right direction if that's what you're after.)</p>
 
-            <h3>The request and response it expects</h3>
+            <h3>The technical request and response expectation</h3>
             <p>The Unity side of the tool sends one request and expects one answer. If you ever swap or rebuild your endpoint, this is what must be preserved, exactly.</p>
             <p>The request it sends:</p>
             <ul class="bullets">
@@ -272,7 +272,7 @@
             <p>By the end of these steps you'll have:</p>
             <ol class="steps">
                 <li>A <strong>LiveKit</strong> server, which gives you a server URL plus an API key and secret (free tier is fine to start).</li>
-                <li>A free <strong>Vercel</strong> account, where the endpoint will live.</li>
+                <li>A free <strong>Vercel</strong> account (for non-commercial use), where the endpoint will live.</li>
                 <li>Node.js installed on your computer, if you want to deploy from the command line. (You can also deploy straight from a Git repository without installing anything; both paths are below.)</li>
             </ol>
 
@@ -302,7 +302,7 @@
     "livekit-server-sdk": "^2.15.4"
   }
 }</code></pre>
-            <p class="code-download"><a href="token-server/package.json" download>Download package.json</a></p>
+            <p class="code-download">Alternately, <a href="token-server/package.json" download>Download package.json</a></p>
             <p>Put the following into <code>api/livekit-token.js</code>:</p>
             <pre><code>// api/livekit-token.js
 // Issues a signed LiveKit access token. POST room + identity in, signed token out.
@@ -402,7 +402,7 @@ export default async function handler(req, res) {
     res.status(500).json({ error: 'Token generation failed' });
   }
 }</code></pre>
-            <p class="code-download"><a href="token-server/api/livekit-token.js" download>Download livekit-token.js</a></p>
+            <p class="code-download">Alternately, <a href="token-server/api/livekit-token.js" download>Download livekit-token.js</a></p>
             <p>This checks if the request is a real <code>POST</code>, reads <code>room</code>, <code>identity</code>, and <code>canPublish</code>, signs a six-hour access pass with your LiveKit key and secret, and sends back <code>{ "token": "..." }</code>. The publishing permission is tied directly to <code>canPublish</code>, so a watcher can never accidentally be handed a sharing pass.</p>
 
             <h3>Step 3 &mdash; Set your allowed origins</h3>
@@ -410,6 +410,7 @@ export default async function handler(req, res) {
             <p>Add the <strong>origin</strong> of the URL where your published experience runs. A couple of examples:</p>
             <ul class="bullets">
                 <li>If you serve from your own site, add that site's <code>https://</code> address.</li>
+                <li>If your experience is served at unreality3d.com/yourname/yourproduct, the origin is https://unreality3d.com (just the scheme and host, no path). It's already in the list in the code above.</li>
                 <li>If you serve from GitHub Pages, add your GitHub Pages address, which is <code>https://yourusername.github.io</code> (just the scheme and host; the repository name that comes after it in the path is not part of the origin, so leave it off).</li>
                 <li>Keep the <code>localhost</code> entries while you're testing locally, and remove them later if you like.</li>
             </ul>
