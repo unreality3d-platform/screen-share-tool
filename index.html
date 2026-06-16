@@ -1,205 +1,328 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Screen Share Tool</title>
-    <link rel="icon" type="image/png" href="favicon.png">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Screen Share Tool — Unreality3D</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<meta name="description" content="Live screen sharing for Unity WebGL and WebXR experiences, viewable right in the browser. Free and open source under the MIT license.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: #f8f9fa;
-        }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-        header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2.5rem 0;
-            text-align: center;
-        }
+:root {
+    --primary-blue: #2563eb;
+    --primary-purple: #7c3aed;
+    --accent-cyan: #06b6d4;
+    --accent-orange: #f59e0b;
+    --success-green: #10b981;
+    --warning-yellow: #d97706;
+    --dark-bg: #0f172a;
+    --medium-bg: #1e293b;
+    --light-bg: #f8fafc;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --text-light: #94a3b8;
+    --text-white: #ffffff;
+    --tag-script: #fa55e3;
+    --tag-ref: #f59e0b;
+    --tag-placeholder: #10b981;
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
 
-        header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-        }
+body {
+    font-family: var(--font-primary);
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: var(--light-bg);
+    -webkit-font-smoothing: antialiased;
+}
 
-        header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            max-width: 640px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
+a { color: var(--primary-blue); }
+a:hover { color: var(--primary-purple); }
+:focus-visible { outline: 3px solid var(--accent-cyan); outline-offset: 2px; border-radius: 4px; }
 
-        .container {
-            max-width: 820px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+.prose-narrow { max-width: 820px; }
 
-        .disclaimer {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            padding: 1rem 1.25rem;
-            margin: 2rem 0;
-        }
+/* Header */
+.header {
+    background: linear-gradient(135deg, var(--dark-bg) 0%, var(--medium-bg) 50%, var(--primary-blue) 100%);
+    color: var(--text-white);
+    position: relative;
+    overflow: hidden;
+}
+.header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+    opacity: 0.3;
+}
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3.5rem 2rem;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+.eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent-cyan);
+    font-weight: 600;
+    margin-bottom: 0.9rem;
+}
+.header-title {
+    font-size: clamp(2.2rem, 5vw, 3rem);
+    font-weight: 800;
+    margin-bottom: 0.8rem;
+    background: linear-gradient(135deg, var(--text-white), var(--accent-cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.tricolor {
+    display: flex;
+    width: 132px;
+    height: 6px;
+    margin: 1.3rem auto 1.5rem;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.tricolor span { flex: 1; }
+.tricolor .r { background: var(--tag-script); }
+.tricolor .y { background: var(--tag-ref); }
+.tricolor .b { background: var(--tag-placeholder); }
+.header-subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    line-height: 1.7;
+    max-width: 62ch;
+    margin: 0 auto;
+}
+.header-fine {
+    font-size: 0.9rem;
+    opacity: 0.7;
+    margin-top: 1.3rem;
+}
 
-        .disclaimer h3 {
-            color: #856404;
-            margin-bottom: 0.5rem;
-        }
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 0.9rem 1.9rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    font-size: 1.05rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    cursor: pointer;
+}
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-purple), var(--primary-blue));
+    color: var(--text-white);
+    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
+}
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(124, 58, 237, 0.6);
+    color: var(--text-white);
+}
+.btn-secondary {
+    background: transparent;
+    color: var(--text-white);
+    border-color: var(--accent-cyan);
+}
+.btn-secondary:hover {
+    background: var(--accent-cyan);
+    color: var(--dark-bg);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4);
+}
+.btn-row { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1.8rem; }
 
-        section {
-            margin: 2.5rem 0;
-        }
+/* Sections */
+.section { padding: 3.5rem 0; }
+.section-title {
+    text-align: center;
+    font-size: clamp(1.8rem, 4vw, 2.4rem);
+    font-weight: 800;
+    margin-bottom: 0.8rem;
+    background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.prose { margin: 0 auto; }
+.prose p { margin-bottom: 1.1rem; color: var(--text-secondary); }
+.prose p:last-child { margin-bottom: 0; }
+.prose strong { color: var(--text-primary); }
 
-        section h2 {
-            color: #2c3e50;
-            font-size: 1.5rem;
-            margin-bottom: 0.75rem;
-            padding-top: 0.5rem;
-        }
+/* Cards */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    gap: 2rem;
+    margin-top: 2.5rem;
+}
+.feature-card {
+    background: #fff;
+    padding: 2.2rem;
+    border-radius: 1.25rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-blue), var(--primary-purple), var(--accent-cyan));
+}
+.feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+.feature-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.6rem; color: var(--text-primary); }
+.feature-description { color: var(--text-secondary); line-height: 1.7; }
+.feature-note { margin-top: 0.8rem; font-size: 0.88rem; color: var(--text-light); font-style: italic; }
 
-        section h3 {
-            color: #2c3e50;
-            font-size: 1.15rem;
-            margin: 1.5rem 0 0.5rem;
-        }
+/* Tags */
+.tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    margin-bottom: 0.9rem;
+    color: #fff;
+}
+.tag-scan { background: linear-gradient(90deg, var(--tag-script) 0 33%, var(--tag-ref) 33% 66%, var(--tag-placeholder) 66% 100%); }
+.tag-script { background: var(--tag-script); }
+.tag-ref { background: var(--tag-ref); }
+.tag-vs { background: var(--medium-bg); }
 
-        section p {
-            color: #444;
-            margin-bottom: 0.75rem;
-        }
+/* Code */
+code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: #eef0f3;
+    padding: 0.12rem 0.4rem;
+    border-radius: 5px;
+    color: var(--medium-bg);
+    word-break: break-word;
+}
+pre {
+    background: var(--dark-bg);
+    color: #e2e8f0;
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin: 0.75rem 0 0.25rem;
+    font-family: var(--font-mono);
+}
+pre code { background: none; padding: 0; color: inherit; font-size: inherit; word-break: normal; white-space: pre; }
+.code-download { margin: 0 0 1.5rem; font-size: 0.9rem; }
 
-        ul.scope, ol.steps, ul.bullets {
-            margin: 0.5rem 0 0.75rem 1.5rem;
-            color: #444;
-        }
+/* Lists */
+ol.steps, ul.bullets, ul.scope { margin: 0.5rem 0 1rem 1.5rem; color: var(--text-secondary); max-width: 70ch; }
+ol.steps li, ul.bullets li, ul.scope li { margin-bottom: 0.6rem; }
+ol.steps strong, ul.bullets strong { color: var(--text-primary); }
 
-        ul.scope li, ol.steps li, ul.bullets li {
-            margin-bottom: 0.5rem;
-        }
+/* Callout / disclaimer */
+.callout {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-left: 4px solid var(--accent-cyan);
+    border-radius: 10px;
+    padding: 1.1rem 1.3rem;
+    max-width: 70ch;
+    color: var(--text-secondary);
+    font-size: 0.96rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+.disclaimer { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 1rem 1.25rem; margin: 2rem 0; }
+.disclaimer h3 { color: var(--warning-yellow); margin-bottom: 0.4rem; font-size: 1.05rem; }
+.disclaimer p { color: #7c4a14; }
 
-        code {
-            background: #eef0f3;
-            padding: 0.15rem 0.4rem;
-            border-radius: 4px;
-            font-size: 0.9em;
-            word-break: break-word;
-        }
+/* Download CTA */
+.download-cta {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 2.2rem 1.5rem;
+    text-align: center;
+    margin: 2.5rem 0;
+    position: relative;
+    overflow: hidden;
+}
+.download-cta::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-blue), var(--primary-purple), var(--accent-cyan));
+}
+.download-cta h2 { margin-bottom: 1rem; color: var(--text-primary); font-size: 1.5rem; font-weight: 700; }
+.download-note { color: var(--text-secondary); font-size: 0.9rem; margin-top: 1rem; }
+.divider { border: none; border-top: 1px solid #e2e6ea; margin: 2.5rem 0 0; }
 
-        pre {
-            background: #1e293b;
-            color: #e2e8f0;
-            padding: 1rem 1.25rem;
-            border-radius: 8px;
-            overflow-x: auto;
-            font-size: 0.85rem;
-            line-height: 1.5;
-            margin: 0.75rem 0 0.25rem;
-        }
+/* Long-form doc text */
+.doc h2 { color: var(--text-primary); font-size: 1.6rem; font-weight: 700; margin-bottom: 0.75rem; padding-top: 0.5rem; }
+.doc h3 { color: var(--text-primary); font-size: 1.15rem; font-weight: 600; margin: 1.5rem 0 0.5rem; }
+.doc p { color: var(--text-secondary); margin-bottom: 0.75rem; }
+.doc strong { color: var(--text-primary); }
+.doc section { margin: 2.5rem 0; }
 
-        pre code {
-            background: none;
-            padding: 0;
-            color: inherit;
-            font-size: inherit;
-            word-break: normal;
-            white-space: pre;
-        }
+/* Footer */
+.footer { background: var(--medium-bg); color: var(--text-white); padding: 2.2rem 0; text-align: center; margin-top: 3rem; }
+.footer-content { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+.footer-content p { margin: 0.4rem 0; opacity: 0.85; font-size: 0.92rem; }
+.repo-link { color: #74b9ff; text-decoration: none; }
+.repo-link:hover { text-decoration: underline; }
 
-        .code-download {
-            margin: 0 0 1.5rem;
-            font-size: 0.9rem;
-        }
-
-        .divider {
-            border: none;
-            border-top: 1px solid #e2e6ea;
-            margin: 2.5rem 0 0;
-        }
-
-        .download-cta {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 2rem 1.5rem;
-            text-align: center;
-            margin: 2.5rem 0;
-        }
-
-        .download-cta h2 {
-            margin-bottom: 1rem;
-        }
-
-        .btn-download {
-            display: inline-block;
-            background: #667eea;
-            color: white;
-            text-decoration: none;
-            font-size: 1.1rem;
-            font-weight: 600;
-            padding: 0.85rem 2rem;
-            border-radius: 8px;
-            transition: background 0.2s ease, transform 0.2s ease;
-        }
-
-        .btn-download:hover {
-            background: #5a6fd8;
-            transform: translateY(-2px);
-        }
-
-        .download-note {
-            color: #666;
-            font-size: 0.9rem;
-            margin-top: 1rem;
-        }
-
-        a {
-            color: #5a6fd8;
-        }
-
-        footer {
-            background: #2c3e50;
-            color: white;
-            text-align: center;
-            padding: 2rem 0;
-            margin-top: 3rem;
-        }
-
-        footer p {
-            margin-bottom: 0.35rem;
-            opacity: 0.9;
-        }
-
-        .repo-link {
-            color: #74b9ff;
-            text-decoration: none;
-        }
-
-        .repo-link:hover {
-            text-decoration: underline;
-        }
-    </style>
+@media (max-width: 768px) {
+    .header-container { padding: 2.5rem 1.5rem; }
+    .container { padding: 0 1.5rem; }
+    .feature-card { padding: 1.8rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+    .feature-card:hover, .btn:hover { transform: none; }
+}
+</style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>Screen Share Tool</h1>
-            <p>Live screen sharing for Unity WebGL and WebXR experiences, viewable right in the browser.</p>
-        </div>
-    </header>
 
-    <main class="container">
+<header class="header">
+    <div class="header-container">
+        <div class="eyebrow">Open source · Unity WebGL &amp; WebXR</div>
+        <h1 class="header-title">Screen Share Tool</h1>
+        <p class="header-subtitle">Live screen sharing for Unity WebGL and WebXR experiences, viewable right in the browser.</p>
+        <div class="btn-row">
+            <a class="btn btn-primary" href="https://github.com/unreality3d-platform/screen-share-tool/releases/latest/download/ScreenShareTool.unitypackage">Download the latest .unitypackage</a>
+            <a class="btn btn-secondary" href="https://github.com/unreality3d-platform/screen-share-tool">View on GitHub</a>
+        </div>
+        <p class="header-fine">Free and MIT licensed. Requires Unity 6 and the LiveKit WebGL SDK.</p>
+    </div>
+</header>
+
+<main class="doc">
+    <div class="container prose-narrow">
+
         <div class="disclaimer">
             <h3>⚠️ Before you start</h3>
             <p>Open source under the MIT license and provided as-is, with no warranty. Back up your Unity project before importing, the way you would with any package.</p>
@@ -222,7 +345,7 @@
 
         <div class="download-cta">
             <h2>Download</h2>
-            <a class="btn-download" href="https://github.com/unreality3d-platform/screen-share-tool/releases/latest/download/ScreenShareTool.unitypackage">Download the latest .unitypackage</a>
+            <a class="btn btn-primary" href="https://github.com/unreality3d-platform/screen-share-tool/releases/latest/download/ScreenShareTool.unitypackage">Download the latest .unitypackage</a>
             <p class="download-note">Requires Unity 6 and the LiveKit WebGL SDK. The importer will offer to install the SDK for you.</p>
         </div>
 
@@ -451,7 +574,8 @@ export default async function handler(req, res) {
   -H "Origin: https://unreality3d.com" \
   -H "Access-Control-Request-Method: POST"</code></pre>
             <p>Use one of your own allowed origins in the <code>-H "Origin: ..."</code> line if you've removed <code>https://unreality3d.com</code> from the list.</p>
-            <p>You want a <code>204</code> response, and an <code>Access-Control-Allow-Origin</code> header that echoes back your origin.<p>Get a real token:</p>
+            <p>You want a <code>204</code> response, and an <code>Access-Control-Allow-Origin</code> header that echoes back your origin.</p>
+            <p>Get a real token:</p>
             <pre><code>curl -i -X POST https://your-project-name.vercel.app/api/livekit-token \
   -H "Content-Type: application/json" \
   -H "Origin: https://unreality3d.com" \
@@ -468,13 +592,20 @@ export default async function handler(req, res) {
             <p>LiveKit's Unity connection comes in two separate parts, one made for browser builds (which works with De-Panther's WebXR Export enabled VR) and one made for standalone builds. Each only runs on the kind of build it was made for. This tool uses the browser kind. A standalone build needs the standalone part instead (or in addition to the browser part, if you want to support both), and since the standalone part doesn't run in a browser, adding it covers the standalone side but not the browser side. Covering both audiences requires setting up and maintaining both.</p>
             <p>So if standalone VR is your goal, treat this guide as the back half already done. The front half, wiring up the standalone client in Unity, is its own project, and it's outside what this tool and doc cover.</p>
         </section>
-    </main>
 
-    <footer>
-        <div class="container">
-            <p>Open source under the MIT license. Works in Unreality3D and other Unity WebGL or WebXR hosts.</p>
-            <p>View the source on <a class="repo-link" href="https://github.com/unreality3d-platform/screen-share-tool">GitHub</a>.</p>
-        </div>
-    </footer>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="footer-content">
+        <p>
+            <a class="repo-link" href="https://github.com/unreality3d-platform/screen-share-tool">GitHub</a> ·
+            <a class="repo-link" href="https://github.com/unreality3d-platform/screen-share-tool/releases/latest">Latest release</a> ·
+            <a class="repo-link" href="https://unreality3d.com">unreality3d.com</a>
+        </p>
+        <p>Open source under the MIT license. Works in Unreality3D and other Unity WebGL or WebXR hosts.</p>
+    </div>
+</footer>
+
 </body>
 </html>
