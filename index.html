@@ -346,7 +346,7 @@ ol.steps strong, ul.bullets strong { color: var(--text-primary); }
         <div class="download-cta">
             <h2>Download</h2>
             <a class="btn btn-primary" href="https://github.com/unreality3d-platform/screen-share-tool/releases/latest/download/ScreenShareTool.unitypackage">Download the latest .unitypackage</a>
-            <p class="download-note">Requires Unity 6 and the LiveKit WebGL SDK. The importer will offer to install the SDK for you.</p>
+            <p class="download-note">Requires Unity 6 and the LiveKit WebGL SDK. The importer walks you through installing the SDK, either automatically or by hand.</p>
         </div>
 
         <section>
@@ -354,10 +354,31 @@ ol.steps strong, ul.bullets strong { color: var(--text-primary); }
             <ol class="steps">
                 <li>Download the package above.</li>
                 <li>In Unity, go to <strong>Assets &gt; Import Package &gt; Custom Package</strong>, choose the file, and import it.</li>
-                <li>When the import finishes, a setup window offers to install the LiveKit WebGL SDK, which is the one dependency. Click <strong>Install LiveKit SDK</strong>. You can also add it yourself in Package Manager with <strong>Add package from git URL</strong>: <code>https://github.com/livekit/client-sdk-unity-web.git#v2.0.0</code></li>
+                <li>When the import finishes, a setup window opens and offers to install the LiveKit WebGL SDK, which is the one dependency. Install it using either path below, then come back here.</li>
+                <li><strong>Confirm it worked</strong> before you go further. Open <strong>Window &gt; Package Manager</strong>, set the dropdown at the top left to <strong>In Project</strong>, and look for LiveKit in the list. If it isn't there, it didn't install, and the build will fail later with errors that won't obviously point back to this step.</li>
                 <li>In your scene, use the menu <strong>Screen Share &gt; Add Screen Share Setup</strong>. It creates the session, a screen surface, and the components that go with them.</li>
                 <li>Set up your own token server using the guide below, then fill in the two addresses on the <strong>ScreenShareSettings</strong> asset.</li>
             </ol>
+
+            <h3>Installing the LiveKit SDK</h3>
+            <p>There are two ways. The first is faster when it works. The second works on any machine.</p>
+
+            <p><strong>Automatic.</strong> Click <strong>Install LiveKit SDK</strong> in the setup window. You can also do the same thing yourself in <strong>Window &gt; Package Manager</strong> with the <strong>+</strong> button and <strong>Add package from git URL</strong>: <code>https://github.com/livekit/client-sdk-unity-web.git#v2.0.0</code></p>
+            <p>This path asks Unity to fetch the SDK using Git, a separate program Unity doesn't include. If Git isn't installed on your computer, or is installed but unhappy, this fails. Nothing else in Unity or in Unreality3D needs Git, so plenty of people won't have it, and that's normal. Use the manual path instead.</p>
+
+            <p><strong>Manual, no Git needed.</strong></p>
+            <ol class="steps">
+                <li>Download the SDK: <a href="https://github.com/livekit/client-sdk-unity-web/archive/refs/tags/v2.0.0.zip">client-sdk-unity-web v2.0.0 (ZIP)</a></li>
+                <li>Extract it. You may end up with a folder inside a folder. The one you want is whichever has <code>package.json</code> sitting directly inside it.</li>
+                <li>Rename that folder to exactly <code>client-sdk-unity-web</code>.</li>
+                <li>Move it into your Unity project's <strong>Packages</strong> folder, the one that sits <em>beside</em> your Assets folder, not inside it. When you're done the path looks like <code>YourProject/Packages/client-sdk-unity-web/package.json</code>.</li>
+                <li>Click back into Unity. It picks up the folder on its own. Confirm it in Package Manager as described in step 4 above.</li>
+            </ol>
+            <p>If Unity seems to ignore the folder entirely, the usual cause is <code>package.json</code> sitting one level too deep. Open the folder you moved: <code>package.json</code> should be right there, not inside another folder.</p>
+
+            <div class="callout">
+                <p><strong>If the automatic install fails with a Git error</strong>, you don't need to solve it to use this tool. The manual path above gets you to the same place. Two messages are common, and both mean the same thing for you: <code>No 'git' executable was found</code> means Git isn't installed, and <code>fatal: not in a git directory</code> means Git is installed but its configuration is getting in Unity's way. Skip to the manual path either way.</p>
+            </div>
         </section>
 
         <hr class="divider">
