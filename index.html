@@ -571,15 +571,19 @@ export default async function handler(req, res) {
             <p>That full URL is what Unity needs. One heads-up: the endpoint won't hand out tokens yet, it still needs your LiveKit credentials, which is the next step.</p>
 
             <h3>Step 5 &mdash; Add your LiveKit credentials, then redeploy</h3>
-            <p>Your key and secret don't go in any code. They go into your Vercel project's settings, where they stay secure on the server. Now that your project exists from Step 4, you can add them:</p>
+            <p>Your key and secret don't go in any code. They go into your Vercel project's settings, where they stay secure on the server. Now that your project exists from Step 4, you can add them.</p>
+            <p><strong>Read this bit carefully, because it's the easiest place in the whole guide to go wrong.</strong> You're adding <em>two</em> variables, and each one has <em>two</em> fields. The <strong>Key</strong> is a fixed name that the code looks for. It is the same for everyone following this guide, and you type it exactly as written below. The <strong>Value</strong> is your own credential from Step 1. The credential goes in the Value field, never in the Key field.</p>
             <ol class="steps">
                 <li>In your Vercel project, open <strong>Settings &rarr; Environment Variables</strong>.</li>
-                <li>Add <code>LIVEKIT_API_KEY</code> with your LiveKit <strong>key</strong> as the value.</li>
-                <li>Add <code>LIVEKIT_API_SECRET</code> with your LiveKit <strong>secret</strong> as the value.</li>
-                <li>Deploy once more so the new values take effect: run <code>npx vercel --prod</code> again, or if you used the Git path, use Vercel's <strong>Redeploy</strong> button on the latest deployment.</li>
+                <li>Click <strong>Add Environment Variable</strong>. In <strong>Key</strong> type <code>LIVEKIT_API_KEY</code>. In <strong>Value</strong> paste your LiveKit API key, the string that starts with <code>API</code>. Make sure <strong>Production</strong> is ticked. Save.</li>
+                <li>Add a second one. In <strong>Key</strong> type <code>LIVEKIT_API_SECRET</code>. In <strong>Value</strong> paste your LiveKit API secret. Tick <strong>Production</strong> again. Save.</li>
+                <li>Redeploy. Run <code>npx vercel --prod</code> again, or if you used the Git path, open <strong>Deployments</strong>, click the most recent one, and use <strong>Redeploy</strong>.</li>
             </ol>
-            <p>That's why the code reads <code>process.env.LIVEKIT_API_KEY</code> and <code>process.env.LIVEKIT_API_SECRET</code> instead of having the actual values written in. The names have to match exactly. After this redeploy, your endpoint is live and issuing tokens.</p>
-
+            <p><strong>When you're done, the Environment Variables page should list exactly two entries, named <code>LIVEKIT_API_KEY</code> and <code>LIVEKIT_API_SECRET</code>.</strong> If you see a name that looks like a credential — something starting with <code>API</code> followed by random characters — the value landed in the Key field. Delete that entry and add it again with the fixed name in Key and the credential in Value.</p>
+            <p><strong>Why the redeploy matters:</strong> Vercel loads these values when a deployment is built, and deployments already running keep whatever they were built with. So adding the variables changes nothing on its own. The deployment made after you add them is the first one that can see them.</p>
+            <p>That's also why the code reads <code>process.env.LIVEKIT_API_KEY</code> and <code>process.env.LIVEKIT_API_SECRET</code> instead of having the actual values written in. The names have to match exactly, including the capital letters and underscores. After this redeploy, your endpoint is live and issuing tokens.</p>
+            <p><em>Optional: Vercel offers a <strong>Sensitive</strong> setting for variables like these, which means the value can't be read back after you save it. It's a reasonable choice for a secret. Note that sensitive variables apply to Production and Preview only, so if you later test locally with <code>vercel dev</code>, they won't be there.</em></p>
+            
             <h3>Step 6 &mdash; Paste Server and Token URLs into the asset in Unity</h3>
             <p>Open your <code>ScreenShareSettings</code> asset in the Unity Editor. (If you don't have one yet, create it from the right-click menu in the Project window: <strong>Assets &gt; Create &gt; Screen Share &gt; Settings</strong>, then assign it to your <code>ScreenShareRoom</code>.) Fill in the two fields:</p>
             <ul class="bullets">
@@ -603,6 +607,26 @@ export default async function handler(req, res) {
   -d '{"room":"test-room","identity":"test-user","canPublish":true}'</code></pre>
             <p>You want a <code>200</code> response with a long <code>token</code> string. If you get a <code>500</code> saying credentials are missing, that's Step 5; add the two environment variables and redeploy, then try again. If you get a <code>400</code>, the body is missing <code>room</code> or <code>identity</code>.</p>
 
+            <h3>When something doesn't work</h3>
+            <p>Almost every problem at this stage announces itself with a specific message. Match the message to the cause here rather than starting over.</p>
+
+            <p><strong><code>Server is missing LiveKit credentials</code></strong> (a 500, seen in Unity's Console or in the curl test)</p>
+            <p>Your endpoint is deployed and running your code correctly. It just can't find the two environment variables. Go back to Step 5 and check three things in order: that the entries are named exactly <code>LIVEKIT_API_KEY</code> and <code>LIVEKIT_API_SECRET</code> and not named after the credentials themselves; that <strong>Production</strong> is ticked on both; and that you redeployed <em>after</em> adding them. The third is the one people miss.</p>
+
+            <p><strong><code>room and identity are required</code></strong> (a 400)</p>
+            <p>The request reached your endpoint but arrived without the fields it needs. If you're seeing this from the curl test, check the <code>-d</code> line for a typo. If you're seeing it from Unity, your <code>ScreenShareSettings</code> is likely pointed at the right endpoint but something upstream is sending an empty room or identity.</p>
+
+            <p><strong>The share buttons never appear in your scene</strong></p>
+            <p>This is usually not a UI problem. The controls turn on once the connection succeeds and the token grants publishing, so a failed token request leaves them hidden. Check Unity's Console for a token error first and fix that; the buttons follow. Note that sharing is desktop-browser only by design, so they won't appear in a headset or on mobile regardless.</p>
+
+            <p><strong>A CORS or blocked-request error in the browser console</strong></p>
+            <p>The address your experience is served from isn't in the <code>ALLOWED_ORIGINS</code> list. Go back to Step 3, add that origin, and deploy again. Remember an origin is scheme and host only, with no trailing slash and no path.</p>
+
+            <p><strong>Nothing reaches the endpoint at all</strong></p>
+            <p>Check the <strong>Token Endpoint Url</strong> on your <code>ScreenShareSettings</code> asset. It needs the full address including the function path, ending in <code>/api/livekit-token</code>. A project address on its own won't work.</p>
+
+            <p>The curl commands in the previous section are the fastest way to separate a server problem from a Unity problem. If curl returns a token, your server side is finished and anything still wrong is on the Unity side.</p>
+            
             <h3>A note on security</h3>
             <p>This endpoint is open on purpose for a test version. Anyone who knows the URL and is calling from an allowed origin can request a token, including a screen-sharing one. For a small private group of people you trust, that's a reasonable place to start, and it keeps the setup simple.</p>
             <p>If you later open this up to a wider or public audience, that's the time to add a caller check. The spot for it is marked in the code above, right before the token is granted: confirm the person is who they say they are (for example, by checking a signed login your host already issues) before handing out a sharing pass. Adding that check doesn't change anything on the Unity side, since the request and answer stay the same shape.</p>
